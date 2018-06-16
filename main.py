@@ -9,6 +9,7 @@ import json
 from selenium.webdriver import chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -28,6 +29,9 @@ TAG_INPUT = "input"
 TAG_FORM = "form"
 
 CLASS_GENG_DUO = "icon-xinbanketangye-gengduo"
+CLASS_GRID_BUTTON = "weui-grid"
+BUTTON_SUCAIKU = u"素材库"
+BUTTON_FILE = u"文件"
 XPATH_SUCAIKU = "//*[@id=\"root\"]/div/div[4]/div[6]/form/div[1]/div[2]/div/a[2]/p"
 CLASS_MATERIAL_PANEL = "material-panel"
 
@@ -147,7 +151,8 @@ def sendImage(path):
     global g_browser
     global g_wait
 
-    imageInput = g_browser.find_element_by_tag_name(TAG_INPUT);
+    inputs = g_browser.find_elements_by_tag_name(TAG_INPUT);
+    imageInput = inputs[0]
     imageInput.send_keys(path)
 
     form = g_browser.find_element_by_tag_name(TAG_FORM);
@@ -164,17 +169,20 @@ def sendAudio(path):
     form = g_browser.find_element_by_tag_name(TAG_FORM);
     form.submit()
 
+g_videoMode = False
 def sendVideo(path):
     global g_browser
     global g_wait
+    global g_videoMode
 
-    button = g_browser.find_element_by_class_name(CLASS_GENG_DUO)
-    button.click()
-    time.sleep(1)
+    if not g_videoMode :
+        button = g_browser.find_element_by_class_name(CLASS_GENG_DUO)
+        button.click()
+        time.sleep(1)
 
-    button = g_browser.find_element_by_xpath(XPATH_SUCAIKU)
-    print button
-    button.click()
+        button = getButton(CLASS_GRID_BUTTON, BUTTON_SUCAIKU)
+        button.click()
+        g_videoMode = True
 
     inputs = g_browser.find_elements_by_tag_name(TAG_INPUT);
     videoInput = inputs[1]
@@ -182,6 +190,43 @@ def sendVideo(path):
 
     form = g_browser.find_element_by_tag_name(TAG_FORM);
     form.submit()
+
+g_fileMode = False
+def sendFile(path):
+    global g_browser
+    global g_wait
+    global g_fileMode
+
+    if not g_fileMode :
+        button = g_browser.find_element_by_class_name(CLASS_GENG_DUO)
+        button.click()
+        time.sleep(1)
+
+        button = getButton(CLASS_GRID_BUTTON, BUTTON_FILE)
+        button.click()
+        g_fileMode = True
+
+    container = g_browser.find_element_by_class_name("classroom-file-panel-container")
+    inputs = container.find_elements_by_tag_name(TAG_INPUT);
+    videoInput = inputs[0]
+    videoInput.send_keys(path)
+    print videoInput.text
+    videoInput.send_keys(path)
+    print videoInput.text
+
+    form = g_browser.find_element_by_tag_name(TAG_FORM);
+    form.submit()
+
+def getButton(cls, text):
+    global g_browser
+    global g_wait
+
+    buttons = g_browser.find_elements_by_class_name(cls)
+    for button in buttons:
+        if button.text == text:
+            return button
+    return None
+
 
 # @return appNameList[], appIdList[]
 def get_app_list():
@@ -237,7 +282,15 @@ def main():
     print "## step1. login ##"
     login()
 
-    sendVideo("/Users/jokinkuang/Pictures/eraser.mp4")
+    sendFile("/Users/jokinkuang/Pictures/eraser.doc")
+    time.sleep(15)
+    sendFile("/Users/jokinkuang/Pictures/eraser.doc")
+    time.sleep(15)
+    sendFile("/Users/jokinkuang/Pictures/eraser.doc")
+
+    # sendVideo("/Users/jokinkuang/Pictures/eraser.mp4")
+    # sendVideo("/Users/jokinkuang/Pictures/eraser.mp4")
+    # sendVideo("/Users/jokinkuang/Pictures/eraser.mp4")
     # sendAudio("/Users/jokinkuang/Pictures/eraser.mp3")
     # sendImage("/Users/jokinkuang/Pictures/eraser.jpeg")
 
