@@ -73,13 +73,12 @@ class ImageTest:
 
     def __init__(self):
         self.session = requests.Session()
-        httplib.HTTPConnection.debuglevel = 1
-
-        logging.basicConfig()
-        logging.getLogger().setLevel(logging.DEBUG)
-        requests_log = logging.getLogger("requests.packages.urllib3")
-        requests_log.setLevel(logging.DEBUG)
-        requests_log.propagate = True
+        # httplib.HTTPConnection.debuglevel = 1
+        # logging.basicConfig()
+        # logging.getLogger().setLevel(logging.DEBUG)
+        # requests_log = logging.getLogger("requests.packages.urllib3")
+        # requests_log.setLevel(logging.DEBUG)
+        # requests_log.propagate = True
 
     # login with selenium
     def login(self):
@@ -125,9 +124,14 @@ class ImageTest:
         self.account = response.json()['data']
         print self.account
 
+    # return the Pass path else return NONE
     def post(self, path):
-
         (fileDir, longname, shortname, fileExt) = self.get_filePath_fileName_fileExt(path)
+        if longname.startswith("."):
+            # ignore .DS_Store
+            print "ignore:" + path
+            return None
+
         self.formData['image'] = (longname, open(path,'rb'), 'image/jpeg')
 
         timeString = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
@@ -151,9 +155,9 @@ class ImageTest:
         print response.text
         result = response.json()
         print result
-        if result['code'] == 0 and "*" in result['data']['message']['content']:
-            return None
-        return path;
+        if result['code'] == 0:
+            return path
+        return None;
 
     def get_filePath_fileName_fileExt(self, path):
         (filepath, longname) = os.path.split(path);
@@ -166,15 +170,20 @@ class ImageTest:
             return None
 
         destDir = self.get_filePath_fileName_fileExt(path)[0] + "/passthrough/"
+        notPassDir = self.get_filePath_fileName_fileExt(path)[0] + "/notpass/"
         if not os.path.exists(destDir):
             os.makedirs(destDir)
+        if not os.path.exists(notPassDir):
+            os.makedirs(notPassDir)
 
         pass_through_dict = {}
         # try:
         pass_file = self.post(path)
         if pass_file is not None and not pass_through_dict.has_key(pass_file):
             pass_through_dict[pass_file] = pass_file
-        shutil.copy(pass_file, destDir)
+            shutil.copy(pass_file, destDir)
+        else:
+            shutil.copy(path, notPassDir)
 
         # except Exception, e:
         #     print "exception is:"+e.message
